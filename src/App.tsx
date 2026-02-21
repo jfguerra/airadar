@@ -22,6 +22,64 @@ const CATEGORIES = [
   { id: 'industry-trends' as CategoryType, label: 'Industry Trends', color: 'bg-orange-100 text-orange-800', keywords: ['UX', 'accessibility', 'trends'], icon: 'TrendingUp' }
 ];
 
+// Category Section Component
+function CategorySection({ cat, items, icons, formatDate }: any) {
+  const [collapsed, setCollapsed] = useState(false);
+  const Icon = icons[cat.icon as keyof typeof icons];
+  
+  return (
+    <div className="mb-6">
+      <button onClick={() => setCollapsed(!collapsed)} className="flex items-center gap-3 w-full text-left mb-4">
+        <div className={`p-2 rounded-lg ${cat.color}`}><Icon className="w-5 h-5" /></div>
+        <h2 className="text-lg font-semibold flex-1">{cat.label}</h2>
+        <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">{items.length}</span>
+        <span className={collapsed ? '' : 'rotate-180'}>▼</span>
+      </button>
+      {!collapsed && (
+        <div className="space-y-3 pl-12">
+          {items.map((u: AIUpdate) => <UpdateCard key={u.id} update={u} category={cat} formatDate={formatDate} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Update Card Component
+function UpdateCard({ update, category, formatDate }: any) {
+  const [expanded, setExpanded] = useState(false);
+  
+  return (
+    <div onClick={() => setExpanded(!expanded)} className={`bg-white border rounded-lg p-4 cursor-pointer hover:shadow-md ${!update.isRead ? 'border-l-4 border-l-blue-500' : ''}`}>
+      <div className="flex items-center gap-2 mb-2">
+        <span className={`text-xs px-2 py-1 rounded-full ${category.color}`}>{category.label}</span>
+        <span className="text-xs text-gray-500">{formatDate(update.date)}</span>
+        {!update.isRead && <span className="w-2 h-2 bg-blue-500 rounded-full" />}
+      </div>
+      <h3 className="font-semibold text-gray-900 mb-1">{update.title}</h3>
+      <p className="text-sm text-gray-600 line-clamp-2">{update.summary}</p>
+      {expanded && (
+        <div className="mt-3 pt-3 border-t flex items-center justify-between">
+          <span className="text-xs text-gray-500">Source: {update.source}</span>
+          <a href={update.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:text-blue-800" onClick={e => e.stopPropagation()}>Read more →</a>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Categories Component
+function Categories({ grouped, categories, icons, formatDate }: any) {
+  return (
+    <>
+      {categories.map((cat: any) => {
+        const items = grouped[cat.id];
+        if (!items || items.length === 0) return null;
+        return <CategorySection key={cat.id} cat={cat} items={items} icons={icons} formatDate={formatDate} />;
+      })}
+    </>
+  );
+}
+
 // Mock data generator
 const generateMock = (): AIUpdate[] => [
   { id: `${Date.now()}-1`, title: 'Figma AI Layout', summary: 'New AI features help designers create layouts 10x faster.', source: 'Figma', url: '#', category: 'design-tools', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false },
@@ -185,47 +243,7 @@ export default function App() {
             <p className="text-gray-600">Click "Refresh" to fetch the latest updates</p>
           </div>
         ) : (
-          CATEGORIES.map(cat => {
-            const items = grouped[cat.id];
-            if (!items || items.length === 0) return null;
-            const Icon = icons[cat.icon as keyof typeof icons];
-            const [collapsed, setCollapsed] = useState(false);
-            
-            return (
-              <div key={cat.id} className="mb-6">
-                <button onClick={() => setCollapsed(!collapsed)} className="flex items-center gap-3 w-full text-left mb-4">
-                  <div className={`p-2 rounded-lg ${cat.color}`}><Icon className="w-5 h-5" /></div>
-                  <h2 className="text-lg font-semibold flex-1">{cat.label}</h2>
-                  <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">{items.length}</span>
-                  <span className={collapsed ? '' : 'rotate-180'}>▼</span>
-                </button>
-                {!collapsed && (
-                  <div className="space-y-3 pl-12">
-                    {items.map(u => {
-                      const [expanded, setExpanded] = useState(false);
-                      return (
-                        <div key={u.id} onClick={() => setExpanded(!expanded)} className={`bg-white border rounded-lg p-4 cursor-pointer hover:shadow-md ${!u.isRead ? 'border-l-4 border-l-blue-500' : ''}`}>
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className={`text-xs px-2 py-1 rounded-full ${cat.color}`}>{cat.label}</span>
-                            <span className="text-xs text-gray-500">{formatDate(u.date)}</span>
-                            {!u.isRead && <span className="w-2 h-2 bg-blue-500 rounded-full" />}
-                          </div>
-                          <h3 className="font-semibold text-gray-900 mb-1">{u.title}</h3>
-                          <p className="text-sm text-gray-600 line-clamp-2">{u.summary}</p>
-                          {expanded && (
-                            <div className="mt-3 pt-3 border-t flex items-center justify-between">
-                              <span className="text-xs text-gray-500">Source: {u.source}</span>
-                              <a href={u.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:text-blue-800" onClick={e => e.stopPropagation()}>Read more →</a>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })
+          <Categories grouped={grouped} categories={CATEGORIES} icons={icons} formatDate={formatDate} />
         )}
       </div>
     </div>
