@@ -74,6 +74,7 @@ function CategorySection({ cat, items, icons, formatDate }: any) {
 // Update Card Component
 function UpdateCard({ update, category, formatDate }: any) {
   const [expanded, setExpanded] = useState(false);
+  const hasValidUrl = update.url && update.url !== '#' && update.url.startsWith('http');
   
   return (
     <div onClick={() => setExpanded(!expanded)} className={`update-card bg-gray-800 border border-gray-700 rounded-lg p-4 cursor-pointer transition-all duration-300 hover:bg-gray-750 hover:shadow-lg hover:shadow-blue-500/10 ${!update.isRead ? 'border-l-4 border-l-blue-500' : ''}`}>
@@ -88,15 +89,19 @@ function UpdateCard({ update, category, formatDate }: any) {
       {/* Footer - visible on mobile, hover on desktop */}
       <div className="update-card-footer mt-3 pt-3 border-t border-gray-700 flex items-center justify-between">
         <span className="text-xs text-gray-500">Source: {update.source}</span>
-        <a 
-          href={update.url} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="text-xs text-blue-400 hover:text-blue-300 font-medium transition-colors" 
-          onClick={e => e.stopPropagation()}
-        >
-          Read more →
-        </a>
+        {hasValidUrl ? (
+          <a 
+            href={update.url} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-xs text-blue-400 hover:text-blue-300 font-medium transition-colors" 
+            onClick={e => e.stopPropagation()}
+          >
+            Read more →
+          </a>
+        ) : (
+          <span className="text-xs text-gray-600 italic">No link available</span>
+        )}
       </div>
     </div>
   );
@@ -115,13 +120,13 @@ function Categories({ grouped, categories, icons, formatDate }: any) {
   );
 }
 
-// Mock data generator
+// Mock data generator with real example URLs
 const generateMock = (): AIUpdate[] => [
-  { id: `${Date.now()}-1`, title: 'Figma AI Layout', summary: 'New AI features help designers create layouts 10x faster.', source: 'Figma', url: '#', category: 'design-tools', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false },
-  { id: `${Date.now()}-2`, title: 'Adobe Firefly', summary: 'Generate custom backgrounds using text prompts in Photoshop.', source: 'Adobe', url: '#', category: 'design-tools', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false },
-  { id: `${Date.now()}-3`, title: 'Sketch to Prototype AI', summary: 'Transform hand-drawn wireframes into interactive prototypes.', source: 'Product Hunt', url: '#', category: 'prototyping', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false },
-  { id: `${Date.now()}-4`, title: 'Design System Generator', summary: 'AI-powered component analysis creates consistent design systems.', source: 'UX Collective', url: '#', category: 'workflow-automation', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false },
-  { id: `${Date.now()}-5`, title: 'AI in UX Research', summary: '67% of designers use AI for user interview analysis.', source: 'Nielsen Norman', url: '#', category: 'industry-trends', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false }
+  { id: `${Date.now()}-1`, title: 'Figma AI Layout Assistant', summary: 'New AI features help designers create layouts 10x faster with intelligent spacing and alignment.', source: 'Figma Blog', url: 'https://www.figma.com/blog/', category: 'design-tools', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false },
+  { id: `${Date.now()}-2`, title: 'Adobe Firefly for Designers', summary: 'Generate custom backgrounds using text prompts in Photoshop and Express.', source: 'Adobe Blog', url: 'https://blog.adobe.com/', category: 'design-tools', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false },
+  { id: `${Date.now()}-3`, title: 'Sketch to Interactive Prototype', summary: 'Transform hand-drawn wireframes into interactive prototypes with AI.', source: 'UX Collective', url: 'https://uxdesign.cc/', category: 'prototyping', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false },
+  { id: `${Date.now()}-4`, title: 'Design System Automation', summary: 'AI-powered component analysis creates consistent design systems automatically.', source: 'Design Systems', url: 'https://www.designsystems.com/', category: 'workflow-automation', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false },
+  { id: `${Date.now()}-5`, title: 'AI in UX Research 2026', summary: '67% of designers use AI for user interview analysis and insight generation.', source: 'Nielsen Norman', url: 'https://www.nngroup.com/', category: 'industry-trends', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false }
 ];
 
 // 📍 CONFIGURE: Add or remove search queries to customize news sources
@@ -192,7 +197,11 @@ const fetchUpdates = async (): Promise<AIUpdate[]> => {
     
     // Filter for relevance and map to our format
     const updates = uniqueArticles
-      .filter(a => isRelevant(a.title, a.description || ''))
+      .filter(a => {
+        // Must be relevant AND have a valid URL
+        const hasValidUrl = a.url && a.url !== '' && !a.url.includes('removed.com');
+        return isRelevant(a.title, a.description || '') && hasValidUrl;
+      })
       .map((a: any, i: number) => ({
         id: `api-${Date.now()}-${i}`,
         title: a.title,
