@@ -31,7 +31,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_GNEWS_API_KEY: ${{ secrets.VITE_GNEWS_API_KEY }}
+          VITE_NEWS_API_ENDPOINT: https://airadar-theta.vercel.app/api/news
       
       - name: Copy .nojekyll
         run: cp .nojekyll dist/.nojekyll
