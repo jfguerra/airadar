@@ -171,6 +171,7 @@ const isRelevant = (title: string, description: string): boolean => {
 
 // Service functions
 const STORAGE_KEY = 'ai-radar';
+const STORAGE_VERSION = 'v2'; // Increment to clear old cached data
 const fetchUpdates = async (): Promise<AIUpdate[]> => {
   const apiKey = import.meta.env.VITE_NEWS_API_KEY;
   if (!apiKey) return generateMock();
@@ -225,6 +226,13 @@ const loadData = () => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return { updates: [], lastFetched: null, nextFetch: null };
     const data = JSON.parse(stored);
+    
+    // Clear old data if version mismatch (fixes old mock data with '#' URLs)
+    if (data.version !== STORAGE_VERSION) {
+      console.log('Clearing old cached data due to version mismatch');
+      return { updates: [], lastFetched: null, nextFetch: null };
+    }
+    
     return {
       updates: data.updates.map((u: any) => ({ ...u, date: new Date(u.date) })),
       lastFetched: data.lastFetched ? new Date(data.lastFetched) : null,
@@ -236,7 +244,12 @@ const loadData = () => {
 };
 
 const saveData = (updates: AIUpdate[], lastFetched: Date, nextFetch: Date) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ updates, lastFetched, nextFetch }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ 
+    version: STORAGE_VERSION,
+    updates, 
+    lastFetched, 
+    nextFetch 
+  }));
 };
 
 // Main Component
