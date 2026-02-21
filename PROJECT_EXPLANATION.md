@@ -19,7 +19,7 @@ Think of it as a **smart magazine** that:
 
 Imagine you're running a restaurant (your website):
 
-1. **The Kitchen (Vercel Backend)** - A chef (serverless function) who goes to the market (GNews API) to buy fresh ingredients (news articles). The chef knows your preferences and only brings back quality items.
+1. **The Kitchen (Vercel Backend)** - A chef (serverless function) who goes to the farmers market (RSS feeds) to buy fresh ingredients (news articles). The chef knows your preferences and only visits quality vendors.
 
 2. **The Dining Room (GitHub Pages)** - Your beautiful restaurant space where customers (visitors) enjoy the meals. It's free hosting provided by GitHub.
 
@@ -62,15 +62,13 @@ Imagine you're running a restaurant (your website):
 
 #### `api/news.js` (The Secret Agent)
 **What it is:** A serverless function running on Vercel
-**What it does:**
-- Acts as a middleman between your website and GNews API
-- Hides your API key from public view (security)
+**What it does:** 
+- Acts as a middleman between your website and RSS feeds
+- Hides nothing (RSS feeds are public)
 - Bypasses browser restrictions (CORS issues)
 - Fetches news articles when requested
 
-**Analogy:** Like a personal shopper who has a membership card (API key) to an exclusive store. They go shopping for you so you don't need the card yourself.
-
-**Why it's needed:** Web browsers block websites from directly talking to news APIs for security reasons. This function runs on a server (not in the browser), so it doesn't have those restrictions.
+**Analogy:** Like a personal shopper who goes to your favorite magazine stands and brings back the latest issues - no membership needed, they know exactly where to go.
 
 ---
 
@@ -208,16 +206,17 @@ Imagine you're running a restaurant (your website):
 
 ---
 
-### **GNews API**
-**What it is:** A news aggregation service
-**Simple explanation:** GNews crawls thousands of news websites and provides a searchable database of articles via an API (Application Programming Interface - a way for programs to talk to each other).
+### **RSS Feeds (Data Source)**
+**What it is:** A standardized format for publishing frequently updated content
+**Simple explanation:** RSS (Really Simple Syndication) is like a magazine subscription. Every blog publishes an RSS feed - a special URL that lists their latest articles. We subscribe to 8 design blogs and fetch their latest content directly.
 
 **Why this one:** 
-- Free tier (100 requests/day)
-- Works in production (unlike NewsAPI)
-- Allows browser requests through our proxy
+- Free and unlimited (no API keys or rate limits)
+- Direct from source (no middleman)
+- 100% relevant (we only subscribe to UX/design blogs)
+- High quality (trusted publications with editorial standards)
 
-**Analogy:** Like a news clipping service that reads 1000s of newspapers daily and sends you only the articles you care about.
+**Analogy:** Instead of searching a newsstand every day, you subscribe to 8 specific design magazines and they're automatically delivered to you.
 
 ---
 
@@ -240,11 +239,11 @@ Imagine you're running a restaurant (your website):
    ↓
 2. Your website (GitHub Pages) sends request to Vercel
    ↓
-3. Vercel function calls GNews API with your secret key
+3. Vercel function fetches from 8 RSS feeds in parallel
    ↓
-4. GNews returns raw articles
+4. RSS feeds return their latest articles
    ↓
-5. Vercel function filters and formats them
+5. Vercel function parses XML, deduplicates, and sorts by date
    ↓
 6. Sends clean data back to your website
    ↓
@@ -257,19 +256,20 @@ Imagine you're running a restaurant (your website):
 
 ### **Why This Architecture?**
 
-**Problem:** News APIs block direct browser requests (CORS policy)
+**Problem:** Web browsers block direct RSS feed requests from different domains (CORS policy)
 
 **Solution:** Serverless proxy
 - Browser → Vercel (allowed) 
-- Vercel → GNews API (allowed)
-- API key stays secret on server
+- Vercel → RSS feeds (allowed)
+- No API keys needed
 
 **Benefits:**
-- ✅ Secure (API key never exposed)
+- ✅ Secure (no secrets to manage)
 - ✅ Works in production
 - ✅ Free hosting (Vercel + GitHub Pages)
 - ✅ Automatic updates
 - ✅ Scales automatically
+- ✅ 100% relevant content
 
 ---
 
@@ -312,7 +312,7 @@ Imagine you're running a restaurant (your website):
 > - **Build Tool:** Vite (lightning-fast development)
 > - **Backend:** Vercel serverless functions (free, scalable)
 > - **Hosting:** GitHub Pages (free static hosting)
-> - **Data Source:** GNews API (100 free requests/day)
+> - **Data Source:** RSS feeds from 8 curated design blogs (free, unlimited)
 >
 > **The Result:**
 > A production-ready web app that's fast, beautiful, and actually useful for Product Designers. No ads, no clutter - just relevant content."

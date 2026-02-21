@@ -85,7 +85,7 @@ export default async function handler(req, res) {
       new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
     );
 
-    // Return in GNews-compatible format for easy frontend integration
+    // Return in same format as previous API for easy frontend compatibility
     return res.status(200).json({
       totalArticles: uniqueArticles.length,
       articles: uniqueArticles.slice(0, 30) // Limit to 30 most recent
