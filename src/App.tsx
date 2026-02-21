@@ -21,28 +21,28 @@ const CATEGORIES = [
     id: 'design-tools' as CategoryType, 
     label: 'AI Design Tools', 
     color: 'bg-blue-900/30 text-blue-400 border-blue-500/30', 
-    keywords: ['figma', 'sketch', 'adobe xd', 'framer', 'AI design tool', 'generative design', 'design plugin', 'AI mockup', 'AI wireframe'], 
+    keywords: ['figma', 'sketch', 'adobe xd', 'framer', 'AI design', 'generative design', 'design plugin', 'midjourney', 'stable diffusion', 'dall-e', 'AI image', 'AI mockup'], 
     icon: 'Wand2' 
   },
   { 
     id: 'prototyping' as CategoryType, 
     label: 'Prototyping & Interaction', 
     color: 'bg-purple-900/30 text-purple-400 border-purple-500/30', 
-    keywords: ['prototype', 'prototyping', 'interaction design', 'micro-interaction', 'animation', 'motion design', 'interactive', 'user flow'], 
+    keywords: ['prototype', 'prototyping', 'interaction design', 'micro-interaction', 'animation', 'motion design', 'interactive prototype', 'user flow', 'wireframe', 'mockup'], 
     icon: 'Layers' 
   },
   { 
     id: 'workflow-automation' as CategoryType, 
     label: 'Design Systems & Workflow', 
     color: 'bg-green-900/30 text-green-400 border-green-500/30', 
-    keywords: ['design system', 'component library', 'design tokens', 'workflow', 'design ops', 'versioning', 'collaboration', 'handoff'], 
+    keywords: ['design system', 'component library', 'design tokens', 'design ops', 'workflow automation', 'versioning', 'collaboration tool', 'handoff', 'storybook', 'pattern library'], 
     icon: 'Zap' 
   },
   { 
     id: 'industry-trends' as CategoryType, 
     label: 'UX Research & Trends', 
     color: 'bg-orange-900/30 text-orange-400 border-orange-500/30', 
-    keywords: ['UX research', 'user research', 'usability', 'accessibility', 'inclusive design', 'user testing', 'UX trend', 'design thinking'], 
+    keywords: ['UX research', 'user research', 'usability testing', 'accessibility', 'a11y', 'inclusive design', 'user testing', 'UX trend', 'design thinking', 'user interview', 'persona'], 
     icon: 'TrendingUp' 
   }
 ];
@@ -130,14 +130,14 @@ const generateMock = (): AIUpdate[] => [
 ];
 
 // 📍 CONFIGURE: Add or remove search terms to customize news sources
+// Focus on UX, Product Design, Design Systems, and AI
 const NEWS_SEARCH_TERMS = [
-  'UX design',
-  'product design',
+  'UX design AI',
+  'product design tools',
   'design systems',
-  'Figma',
-  'prototyping',
-  'user experience',
-  'design tools'
+  'Figma plugins',
+  'user interface AI',
+  'design workflow automation'
 ];
 
 // Helper: Categorize article based on keywords
@@ -158,15 +158,40 @@ const categorizeArticle = (title: string, description: string): CategoryType => 
 // Helper: Check if article is relevant to Product Design/UX
 const isRelevant = (title: string, description: string): boolean => {
   const text = `${title} ${description}`.toLowerCase();
-  const relevantTerms = ['design', 'ux', 'ui', 'product design', 'figma', 'prototype', 'user', 'designer', 'interface', 'experience'];
-  const irrelevantTerms = ['fashion', 'interior design', 'architecture', 'graphic design', 'print', 'clothing'];
   
-  // Must contain at least one relevant term
-  const hasRelevant = relevantTerms.some(term => text.includes(term));
-  // Must NOT contain irrelevant terms
-  const hasIrrelevant = irrelevantTerms.some(term => text.includes(term));
+  // MUST contain at least one of these core terms
+  const coreTerms = [
+    'ux', 'ui', 'user experience', 'user interface',
+    'product design', 'product designer',
+    'design system', 'design token',
+    'figma', 'sketch', 'adobe xd', 'framer',
+    'prototype', 'wireframe', 'mockup',
+    'usability', 'accessibility', 'a11y',
+    'interaction design', 'visual design',
+    'design tool', 'design workflow',
+    'user research', 'user testing'
+  ];
   
-  return hasRelevant && !hasIrrelevant;
+  // MUST NOT contain these unrelated terms
+  const excludeTerms = [
+    'fashion design', 'interior design', 'architecture', 'architectural',
+    'graphic design', 'print design', 'logo design',
+    'industrial design', 'mechanical design',
+    'clothing', 'apparel', 'furniture', 'kitchen', 'bathroom',
+    'real estate', 'construction', 'building design',
+    'game design', 'level design', // unless it mentions UX/UI
+    'jewelry', 'tattoo', 'hair', 'makeup'
+  ];
+  
+  const hasCore = coreTerms.some(term => text.includes(term));
+  const hasExcluded = excludeTerms.some(term => text.includes(term));
+  
+  // Special case: "game design" is OK if it mentions UX/UI
+  if (text.includes('game design') && (text.includes('ux') || text.includes('ui') || text.includes('user interface'))) {
+    return true;
+  }
+  
+  return hasCore && !hasExcluded;
 };
 
 // Service functions
