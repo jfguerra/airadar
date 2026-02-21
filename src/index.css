@@ -3,11 +3,39 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Minimal base */
+/* Dark mode base styles */
 @layer base {
-  * { @apply border-gray-200; }
+  * { 
+    @apply border-gray-700;
+  }
   body { 
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gray-900 text-gray-100;
     font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+/* Smooth transitions for hover effects */
+.update-card-footer {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Desktop: hide footer by default, show on hover */
+@media (min-width: 768px) {
+  .update-card-footer {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  
+  .update-card:hover .update-card-footer {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile: always show footer */
+@media (max-width: 767px) {
+  .update-card-footer {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

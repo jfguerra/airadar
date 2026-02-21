@@ -16,10 +16,10 @@ interface AIUpdate {
 }
 
 const CATEGORIES = [
-  { id: 'design-tools' as CategoryType, label: 'AI Design Tools', color: 'bg-blue-100 text-blue-800', keywords: ['AI design', 'Figma', 'plugin', 'image generation'], icon: 'Wand2' },
-  { id: 'prototyping' as CategoryType, label: 'Prototyping AI', color: 'bg-purple-100 text-purple-800', keywords: ['prototyping', 'interaction', 'wireframe'], icon: 'Layers' },
-  { id: 'workflow-automation' as CategoryType, label: 'Workflow Automation', color: 'bg-green-100 text-green-800', keywords: ['workflow', 'automation', 'productivity'], icon: 'Zap' },
-  { id: 'industry-trends' as CategoryType, label: 'Industry Trends', color: 'bg-orange-100 text-orange-800', keywords: ['UX', 'accessibility', 'trends'], icon: 'TrendingUp' }
+  { id: 'design-tools' as CategoryType, label: 'AI Design Tools', color: 'bg-blue-900/30 text-blue-400 border-blue-500/30', keywords: ['AI design', 'Figma', 'plugin', 'image generation'], icon: 'Wand2' },
+  { id: 'prototyping' as CategoryType, label: 'Prototyping AI', color: 'bg-purple-900/30 text-purple-400 border-purple-500/30', keywords: ['prototyping', 'interaction', 'wireframe'], icon: 'Layers' },
+  { id: 'workflow-automation' as CategoryType, label: 'Workflow Automation', color: 'bg-green-900/30 text-green-400 border-green-500/30', keywords: ['workflow', 'automation', 'productivity'], icon: 'Zap' },
+  { id: 'industry-trends' as CategoryType, label: 'Industry Trends', color: 'bg-orange-900/30 text-orange-400 border-orange-500/30', keywords: ['UX', 'accessibility', 'trends'], icon: 'TrendingUp' }
 ];
 
 // Category Section Component
@@ -29,11 +29,13 @@ function CategorySection({ cat, items, icons, formatDate }: any) {
   
   return (
     <div className="mb-6">
-      <button onClick={() => setCollapsed(!collapsed)} className="flex items-center gap-3 w-full text-left mb-4">
-        <div className={`p-2 rounded-lg ${cat.color}`}><Icon className="w-5 h-5" /></div>
-        <h2 className="text-lg font-semibold flex-1">{cat.label}</h2>
-        <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">{items.length}</span>
-        <span className={collapsed ? '' : 'rotate-180'}>▼</span>
+      <button onClick={() => setCollapsed(!collapsed)} className="flex items-center gap-3 w-full text-left mb-4 group transition-all">
+        <div className={`p-2 rounded-lg ${cat.color.replace('100', '900/30').replace('800', '400')} transition-colors group-hover:bg-opacity-50`}>
+          <Icon className="w-5 h-5" />
+        </div>
+        <h2 className="text-lg font-semibold flex-1 text-gray-100">{cat.label}</h2>
+        <span className="text-sm bg-gray-800 text-gray-300 px-2 py-1 rounded-full border border-gray-700">{items.length}</span>
+        <span className={`transition-transform duration-300 text-gray-400 ${collapsed ? '' : 'rotate-180'}`}>▼</span>
       </button>
       {!collapsed && (
         <div className="space-y-3 pl-12">
@@ -49,20 +51,28 @@ function UpdateCard({ update, category, formatDate }: any) {
   const [expanded, setExpanded] = useState(false);
   
   return (
-    <div onClick={() => setExpanded(!expanded)} className={`bg-white border rounded-lg p-4 cursor-pointer hover:shadow-md ${!update.isRead ? 'border-l-4 border-l-blue-500' : ''}`}>
+    <div onClick={() => setExpanded(!expanded)} className={`update-card bg-gray-800 border border-gray-700 rounded-lg p-4 cursor-pointer transition-all duration-300 hover:bg-gray-750 hover:shadow-lg hover:shadow-blue-500/10 ${!update.isRead ? 'border-l-4 border-l-blue-500' : ''}`}>
       <div className="flex items-center gap-2 mb-2">
-        <span className={`text-xs px-2 py-1 rounded-full ${category.color}`}>{category.label}</span>
-        <span className="text-xs text-gray-500">{formatDate(update.date)}</span>
-        {!update.isRead && <span className="w-2 h-2 bg-blue-500 rounded-full" />}
+        <span className={`text-xs px-2 py-1 rounded-full border ${category.color.replace('100', '900/50').replace('800', '400')}`}>{category.label}</span>
+        <span className="text-xs text-gray-400">{formatDate(update.date)}</span>
+        {!update.isRead && <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />}
       </div>
-      <h3 className="font-semibold text-gray-900 mb-1">{update.title}</h3>
-      <p className="text-sm text-gray-600 line-clamp-2">{update.summary}</p>
-      {expanded && (
-        <div className="mt-3 pt-3 border-t flex items-center justify-between">
-          <span className="text-xs text-gray-500">Source: {update.source}</span>
-          <a href={update.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:text-blue-800" onClick={e => e.stopPropagation()}>Read more →</a>
-        </div>
-      )}
+      <h3 className="font-semibold text-gray-100 mb-1">{update.title}</h3>
+      <p className="text-sm text-gray-400 line-clamp-2">{update.summary}</p>
+      
+      {/* Footer - visible on mobile, hover on desktop */}
+      <div className="update-card-footer mt-3 pt-3 border-t border-gray-700 flex items-center justify-between">
+        <span className="text-xs text-gray-500">Source: {update.source}</span>
+        <a 
+          href={update.url} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-xs text-blue-400 hover:text-blue-300 font-medium transition-colors" 
+          onClick={e => e.stopPropagation()}
+        >
+          Read more →
+        </a>
+      </div>
     </div>
   );
 }
@@ -199,48 +209,48 @@ export default function App() {
   const unread = updates.filter(u => !u.isRead).length;
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
+    <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <RefreshCw className="w-8 h-8 text-blue-400 animate-spin" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-900 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <Radar className="w-8 h-8 text-blue-600" />
+          <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+            <Radar className="w-8 h-8 text-blue-400" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">AI Radar</h1>
-            <p className="text-gray-600">Curated AI updates for Product Designers</p>
+            <h1 className="text-3xl font-bold text-gray-100">AI Radar</h1>
+            <p className="text-gray-400">Curated AI updates for Product Designers</p>
           </div>
         </div>
 
         {/* Summary */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-8">
+        <div className="bg-gradient-to-br from-gray-800 to-gray-800/50 border border-gray-700 rounded-lg p-6 mb-8 backdrop-blur">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-gray-900">{updates.length} Updates</div>
-              {unread > 0 && <div className="text-sm text-blue-600">{unread} unread</div>}
+              <div className="text-2xl font-bold text-gray-100">{updates.length} Updates</div>
+              {unread > 0 && <div className="text-sm text-blue-400">{unread} unread</div>}
               {lastFetched && <div className="text-xs text-gray-500 mt-2">Last: {formatDate(lastFetched)}</div>}
               {nextFetch && <div className="text-xs text-gray-500">Next: {formatTime(nextFetch.getTime() - Date.now())}</div>}
             </div>
-            <button onClick={refresh} disabled={fetching} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+            <button onClick={refresh} disabled={fetching} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 transition-all">
               <RefreshCw className={`w-4 h-4 ${fetching ? 'animate-spin' : ''}`} />
               {fetching ? 'Fetching...' : 'Refresh'}
             </button>
           </div>
-          {error && <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>}
+          {error && <div className="mt-4 p-3 bg-red-900/30 border border-red-500/30 rounded-lg text-sm text-red-400">{error}</div>}
         </div>
 
         {/* Updates */}
         {updates.length === 0 ? (
-          <div className="bg-white border rounded-lg p-12 text-center">
-            <Radar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No updates yet</h3>
-            <p className="text-gray-600">Click "Refresh" to fetch the latest updates</p>
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-12 text-center">
+            <Radar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-100 mb-2">No updates yet</h3>
+            <p className="text-gray-400">Click "Refresh" to fetch the latest updates</p>
           </div>
         ) : (
           <Categories grouped={grouped} categories={CATEGORIES} icons={icons} formatDate={formatDate} />
