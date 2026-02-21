@@ -90,17 +90,17 @@ function UpdateCard({ update, category, formatDate }: any) {
       <div className="update-card-footer mt-3 pt-3 border-t border-gray-700 flex items-center justify-between">
         <span className="text-xs text-gray-500">Source: {update.source}</span>
         {hasValidUrl ? (
-          <a 
-            href={update.url} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-xs text-blue-400 hover:text-blue-300 font-medium transition-colors" 
-            onClick={e => e.stopPropagation()}
-          >
-            Read more →
-          </a>
+        <a 
+          href={update.url} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-xs text-blue-400 hover:text-blue-300 font-medium transition-colors" 
+          onClick={e => e.stopPropagation()}
+        >
+          Read article →
+        </a>
         ) : (
-          <span className="text-xs text-gray-600 italic">No link available</span>
+          <span className="text-xs text-gray-600 italic">Link unavailable</span>
         )}
       </div>
     </div>
@@ -348,10 +348,15 @@ export default function App() {
   };
 
   const formatTime = (ms: number | null) => {
-    if (!ms || ms <= 0) return 'Soon';
+    if (!ms || ms <= 0) return 'a few moments';
     const hours = Math.floor(ms / (1000 * 60 * 60));
-    if (hours >= 24) return `${Math.floor(hours / 24)}d ${hours % 24}h`;
-    return `${hours}h`;
+    if (hours >= 24) {
+      const days = Math.floor(hours / 24);
+      const remainingHours = hours % 24;
+      if (remainingHours === 0) return `${days} ${days === 1 ? 'day' : 'days'}`;
+      return `${days}d ${remainingHours}h`;
+    }
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
   };
 
   const grouped = CATEGORIES.reduce((acc, cat) => {
@@ -378,7 +383,7 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-100">AI Radar</h1>
-            <p className="text-gray-400">Curated AI updates for Product Designers</p>
+            <p className="text-gray-400">Your curated digest of AI & design innovation</p>
           </div>
         </div>
 
@@ -386,26 +391,26 @@ export default function App() {
         <div className="bg-gradient-to-br from-gray-800 to-gray-800/50 border border-gray-700 rounded-lg p-6 mb-8 backdrop-blur">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-gray-100">{updates.length} Updates</div>
+              <div className="text-2xl font-bold text-gray-100">{updates.length} New {updates.length === 1 ? 'Story' : 'Stories'}</div>
               {unread > 0 && <div className="text-sm text-blue-400">{unread} unread</div>}
-              {lastFetched && <div className="text-xs text-gray-500 mt-2">Last: {formatDate(lastFetched)}</div>}
-              {nextFetch && <div className="text-xs text-gray-500">Next: {formatTime(nextFetch.getTime() - Date.now())}</div>}
-              {!import.meta.env.VITE_NEWS_API_ENDPOINT && <div className="text-xs text-yellow-500 mt-2">⚠️ Using demo data (API endpoint not configured)</div>}
+              {lastFetched && <div className="text-xs text-gray-500 mt-2">Last updated: {formatDate(lastFetched)}</div>}
+              {nextFetch && <div className="text-xs text-gray-500">Next update in {formatTime(nextFetch.getTime() - Date.now())}</div>}
+              {!import.meta.env.VITE_NEWS_API_ENDPOINT && <div className="text-xs text-yellow-500 mt-2">⚠️ Demo mode (connect API for live updates)</div>}
             </div>
             <button onClick={refresh} disabled={fetching} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 transition-all">
               <RefreshCw className={`w-4 h-4 ${fetching ? 'animate-spin' : ''}`} />
-              {fetching ? 'Fetching...' : 'Refresh'}
+              {fetching ? 'Loading...' : 'Update Now'}
             </button>
           </div>
-          {error && <div className="mt-4 p-3 bg-red-900/30 border border-red-500/30 rounded-lg text-sm text-red-400">{error}</div>}
+          {error && <div className="mt-4 p-3 bg-red-900/30 border border-red-500/30 rounded-lg text-sm text-red-400">Couldn't load updates. Please try again.</div>}
         </div>
 
         {/* Updates */}
         {updates.length === 0 ? (
           <div className="bg-gray-800 border border-gray-700 rounded-lg p-12 text-center">
             <Radar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-100 mb-2">No updates yet</h3>
-            <p className="text-gray-400">Click "Refresh" to fetch the latest updates</p>
+            <h3 className="text-xl font-semibold text-gray-100 mb-2">No stories yet</h3>
+            <p className="text-gray-400">Click "Update Now" to get the latest design & AI news</p>
           </div>
         ) : (
           <Categories grouped={grouped} categories={CATEGORIES} icons={icons} formatDate={formatDate} />
