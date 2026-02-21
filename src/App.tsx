@@ -129,134 +129,52 @@ const generateMock = (): AIUpdate[] => [
   { id: `${Date.now()}-5`, title: 'AI in UX Research 2026', summary: '67% of designers use AI for user interview analysis and insight generation.', source: 'Nielsen Norman', url: 'https://www.nngroup.com/', category: 'industry-trends', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false }
 ];
 
-// 📍 CONFIGURE: Add or remove search terms to customize news sources
-// Focus on UX, Product Design, Design Systems, and AI
-const NEWS_SEARCH_TERMS = [
-  'UX design AI',
-  'product design tools',
-  'design systems',
-  'Figma plugins',
-  'user interface AI',
-  'design workflow automation'
-];
-
-// Helper: Categorize article based on keywords
-const categorizeArticle = (title: string, description: string): CategoryType => {
-  const text = `${title} ${description}`.toLowerCase();
-  
-  for (const cat of CATEGORIES) {
-    for (const keyword of cat.keywords) {
-      if (text.includes(keyword.toLowerCase())) {
-        return cat.id;
-      }
-    }
-  }
-  
-  return 'industry-trends'; // Default category
-};
-
-// Helper: Check if article is relevant to Product Design/UX
-const isRelevant = (title: string, description: string): boolean => {
-  const text = `${title} ${description}`.toLowerCase();
-  
-  // MUST contain at least one of these core terms
-  const coreTerms = [
-    'ux', 'ui', 'user experience', 'user interface',
-    'product design', 'product designer',
-    'design system', 'design token',
-    'figma', 'sketch', 'adobe xd', 'framer',
-    'prototype', 'wireframe', 'mockup',
-    'usability', 'accessibility', 'a11y',
-    'interaction design', 'visual design',
-    'design tool', 'design workflow',
-    'user research', 'user testing'
-  ];
-  
-  // MUST NOT contain these unrelated terms
-  const excludeTerms = [
-    'fashion design', 'interior design', 'architecture', 'architectural',
-    'graphic design', 'print design', 'logo design',
-    'industrial design', 'mechanical design',
-    'clothing', 'apparel', 'furniture', 'kitchen', 'bathroom',
-    'real estate', 'construction', 'building design',
-    'game design', 'level design', // unless it mentions UX/UI
-    'jewelry', 'tattoo', 'hair', 'makeup'
-  ];
-  
-  const hasCore = coreTerms.some(term => text.includes(term));
-  const hasExcluded = excludeTerms.some(term => text.includes(term));
-  
-  // Special case: "game design" is OK if it mentions UX/UI
-  if (text.includes('game design') && (text.includes('ux') || text.includes('ui') || text.includes('user interface'))) {
-    return true;
-  }
-  
-  return hasCore && !hasExcluded;
-};
+// 📍 CONFIGURE: RSS feeds are now managed in the Vercel function (api/news.js)
+// The backend fetches from curated design blogs - no filtering needed!
+// Sources: Nielsen Norman, Smashing Magazine, UX Collective, A List Apart, 
+// Figma Blog, CSS-Tricks, Sidebar, Framer
 
 // Service functions
 const STORAGE_KEY = 'ai-radar';
-const STORAGE_VERSION = 'v4'; // Increment to clear old cached data (v4: using Vercel proxy)
+const STORAGE_VERSION = 'v5'; // Increment to clear old cached data (v5: RSS feeds)
 
-// Vercel serverless function endpoint (change this to your deployed URL)
-const NEWS_API_ENDPOINT = import.meta.env.VITE_NEWS_API_ENDPOINT || 'https://your-project.vercel.app/api/news';
+// Vercel serverless function endpoint
+const NEWS_API_ENDPOINT = import.meta.env.VITE_NEWS_API_ENDPOINT || 'https://airadar-theta.vercel.app/api/news';
 
 const fetchUpdates = async (): Promise<AIUpdate[]> => {
-  console.log('🔄 Fetching real news from proxy API...');
+  console.log('🔄 Fetching curated RSS feeds from design blogs...');
   
   try {
-    // Fetch articles from multiple search terms via our proxy
-    const allArticles: any[] = [];
+    // Call our Vercel serverless function (no query params needed - RSS feeds are configured server-side)
+    const res = await fetch(NEWS_API_ENDPOINT);
+    const data = await res.json();
     
-    for (const searchTerm of NEWS_SEARCH_TERMS) {
-      // Call our Vercel serverless function instead of GNews directly
-      const url = `${NEWS_API_ENDPOINT}?q=${encodeURIComponent(searchTerm)}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      
-      if (data.errors || data.error) {
-        console.error(`❌ API Error for "${searchTerm}":`, data.errors || data.error);
-        continue;
-      }
-      
-      if (data.articles) {
-        console.log(`✅ Fetched ${data.articles.length} articles for "${searchTerm}"`);
-        allArticles.push(...data.articles);
-      }
+    if (data.error) {
+      console.error(`❌ API Error:`, data.error);
+      return generateMock();
     }
     
-    if (allArticles.length === 0) {
+    if (!data.articles || data.articles.length === 0) {
       console.log('⚠️ No articles found - using mock data');
       return generateMock();
     }
     
-    console.log(`📊 Total articles fetched: ${allArticles.length}`);
+    console.log(`✅ Fetched ${data.articles.length} curated articles from RSS feeds`);
     
-    // Remove duplicates by URL
-    const uniqueArticles = Array.from(
-      new Map(allArticles.map(a => [a.url, a])).values()
-    );
-    
-    console.log(`🔍 Unique articles after deduplication: ${uniqueArticles.length}`);
-    
-    // Filter for relevance and map to our format
-    const updates = uniqueArticles
-      .filter(a => {
-        // Must be relevant AND have a valid URL
-        const hasValidUrl = a.url && a.url !== '' && !a.url.includes('removed.com');
-        return isRelevant(a.title, a.description || '') && hasValidUrl;
-      })
+    // Map to our format (articles already have category from RSS feed config)
+    const updates = data.articles
+      .filter((a: any) => a.url && a.url !== '')
       .map((a: any, i: number) => ({
-        id: `api-${Date.now()}-${i}`,
+        id: `rss-${Date.now()}-${i}`,
         title: a.title,
-        summary: (a.description || a.content || 'No description available').substring(0, 150),
+        summary: (a.description || 'No description available').substring(0, 150),
         source: a.source.name,
         url: a.url,
-        category: categorizeArticle(a.title, a.description || ''),
+        category: (a.category || 'industry-trends') as CategoryType,
         date: new Date(a.publishedAt),
         isRead: false
       }))
-      .slice(0, 15); // Limit to top 15 articles
+      .slice(0, 25); // Limit to top 25 articles
     
     console.log(`✨ Final updates: ${updates.length} relevant articles`);
     
