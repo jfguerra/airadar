@@ -196,29 +196,26 @@ const isRelevant = (title: string, description: string): boolean => {
 
 // Service functions
 const STORAGE_KEY = 'ai-radar';
-const STORAGE_VERSION = 'v3'; // Increment to clear old cached data (v3: switched to GNews API)
+const STORAGE_VERSION = 'v4'; // Increment to clear old cached data (v4: using Vercel proxy)
+
+// Vercel serverless function endpoint (change this to your deployed URL)
+const NEWS_API_ENDPOINT = import.meta.env.VITE_NEWS_API_ENDPOINT || 'https://your-project.vercel.app/api/news';
+
 const fetchUpdates = async (): Promise<AIUpdate[]> => {
-  const apiKey = import.meta.env.VITE_GNEWS_API_KEY;
-  
-  if (!apiKey) {
-    console.log('⚠️ No API key found - using mock data');
-    return generateMock();
-  }
-  
-  console.log('🔄 Fetching real news from GNews API...');
+  console.log('🔄 Fetching real news from proxy API...');
   
   try {
-    // Fetch articles from multiple search terms
+    // Fetch articles from multiple search terms via our proxy
     const allArticles: any[] = [];
     
     for (const searchTerm of NEWS_SEARCH_TERMS) {
-      // GNews API: https://gnews.io/docs/v4
-      const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(searchTerm)}&lang=en&country=us&max=10&apikey=${apiKey}`;
+      // Call our Vercel serverless function instead of GNews directly
+      const url = `${NEWS_API_ENDPOINT}?q=${encodeURIComponent(searchTerm)}`;
       const res = await fetch(url);
       const data = await res.json();
       
-      if (data.errors) {
-        console.error(`❌ API Error for "${searchTerm}":`, data.errors);
+      if (data.errors || data.error) {
+        console.error(`❌ API Error for "${searchTerm}":`, data.errors || data.error);
         continue;
       }
       
@@ -254,7 +251,7 @@ const fetchUpdates = async (): Promise<AIUpdate[]> => {
         title: a.title,
         summary: (a.description || a.content || 'No description available').substring(0, 150),
         source: a.source.name,
-        url: a.url, // This is the actual article URL from GNews
+        url: a.url,
         category: categorizeArticle(a.title, a.description || ''),
         date: new Date(a.publishedAt),
         isRead: false
@@ -393,7 +390,7 @@ export default function App() {
               {unread > 0 && <div className="text-sm text-blue-400">{unread} unread</div>}
               {lastFetched && <div className="text-xs text-gray-500 mt-2">Last: {formatDate(lastFetched)}</div>}
               {nextFetch && <div className="text-xs text-gray-500">Next: {formatTime(nextFetch.getTime() - Date.now())}</div>}
-              {!import.meta.env.VITE_GNEWS_API_KEY && <div className="text-xs text-yellow-500 mt-2">⚠️ Using demo data (API key not configured)</div>}
+              {!import.meta.env.VITE_NEWS_API_ENDPOINT && <div className="text-xs text-yellow-500 mt-2">⚠️ Using demo data (API endpoint not configured)</div>}
             </div>
             <button onClick={refresh} disabled={fetching} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 transition-all">
               <RefreshCw className={`w-4 h-4 ${fetching ? 'animate-spin' : ''}`} />
