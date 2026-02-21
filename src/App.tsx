@@ -366,6 +366,7 @@ export default function App() {
               {unread > 0 && <div className="text-sm text-blue-400">{unread} unread</div>}
               {lastFetched && <div className="text-xs text-gray-500 mt-2">Last: {formatDate(lastFetched)}</div>}
               {nextFetch && <div className="text-xs text-gray-500">Next: {formatTime(nextFetch.getTime() - Date.now())}</div>}
+              {!import.meta.env.VITE_NEWS_API_KEY && <div className="text-xs text-yellow-500 mt-2">⚠️ Using demo data (API key not configured)</div>}
             </div>
             <button onClick={refresh} disabled={fetching} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 transition-all">
               <RefreshCw className={`w-4 h-4 ${fetching ? 'animate-spin' : ''}`} />
