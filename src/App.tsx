@@ -15,11 +15,36 @@ interface AIUpdate {
   isRead: boolean;
 }
 
+// 📍 CONFIGURE: Update keywords to filter for relevant Product Design/UX topics
 const CATEGORIES = [
-  { id: 'design-tools' as CategoryType, label: 'AI Design Tools', color: 'bg-blue-900/30 text-blue-400 border-blue-500/30', keywords: ['AI design', 'Figma', 'plugin', 'image generation'], icon: 'Wand2' },
-  { id: 'prototyping' as CategoryType, label: 'Prototyping AI', color: 'bg-purple-900/30 text-purple-400 border-purple-500/30', keywords: ['prototyping', 'interaction', 'wireframe'], icon: 'Layers' },
-  { id: 'workflow-automation' as CategoryType, label: 'Workflow Automation', color: 'bg-green-900/30 text-green-400 border-green-500/30', keywords: ['workflow', 'automation', 'productivity'], icon: 'Zap' },
-  { id: 'industry-trends' as CategoryType, label: 'Industry Trends', color: 'bg-orange-900/30 text-orange-400 border-orange-500/30', keywords: ['UX', 'accessibility', 'trends'], icon: 'TrendingUp' }
+  { 
+    id: 'design-tools' as CategoryType, 
+    label: 'AI Design Tools', 
+    color: 'bg-blue-900/30 text-blue-400 border-blue-500/30', 
+    keywords: ['figma', 'sketch', 'adobe xd', 'framer', 'AI design tool', 'generative design', 'design plugin', 'AI mockup', 'AI wireframe'], 
+    icon: 'Wand2' 
+  },
+  { 
+    id: 'prototyping' as CategoryType, 
+    label: 'Prototyping & Interaction', 
+    color: 'bg-purple-900/30 text-purple-400 border-purple-500/30', 
+    keywords: ['prototype', 'prototyping', 'interaction design', 'micro-interaction', 'animation', 'motion design', 'interactive', 'user flow'], 
+    icon: 'Layers' 
+  },
+  { 
+    id: 'workflow-automation' as CategoryType, 
+    label: 'Design Systems & Workflow', 
+    color: 'bg-green-900/30 text-green-400 border-green-500/30', 
+    keywords: ['design system', 'component library', 'design tokens', 'workflow', 'design ops', 'versioning', 'collaboration', 'handoff'], 
+    icon: 'Zap' 
+  },
+  { 
+    id: 'industry-trends' as CategoryType, 
+    label: 'UX Research & Trends', 
+    color: 'bg-orange-900/30 text-orange-400 border-orange-500/30', 
+    keywords: ['UX research', 'user research', 'usability', 'accessibility', 'inclusive design', 'user testing', 'UX trend', 'design thinking'], 
+    icon: 'TrendingUp' 
+  }
 ];
 
 // Category Section Component
@@ -99,6 +124,46 @@ const generateMock = (): AIUpdate[] => [
   { id: `${Date.now()}-5`, title: 'AI in UX Research', summary: '67% of designers use AI for user interview analysis.', source: 'Nielsen Norman', url: '#', category: 'industry-trends', date: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000), isRead: false }
 ];
 
+// 📍 CONFIGURE: Add or remove search queries to customize news sources
+const NEWS_QUERIES = [
+  'UX design AI',
+  'product design tools',
+  'design system',
+  'Figma AI',
+  'prototyping tools',
+  'user research AI',
+  'design workflow automation'
+];
+
+// Helper: Categorize article based on keywords
+const categorizeArticle = (title: string, description: string): CategoryType => {
+  const text = `${title} ${description}`.toLowerCase();
+  
+  for (const cat of CATEGORIES) {
+    for (const keyword of cat.keywords) {
+      if (text.includes(keyword.toLowerCase())) {
+        return cat.id;
+      }
+    }
+  }
+  
+  return 'industry-trends'; // Default category
+};
+
+// Helper: Check if article is relevant to Product Design/UX
+const isRelevant = (title: string, description: string): boolean => {
+  const text = `${title} ${description}`.toLowerCase();
+  const relevantTerms = ['design', 'ux', 'ui', 'product design', 'figma', 'prototype', 'user', 'designer', 'interface', 'experience'];
+  const irrelevantTerms = ['fashion', 'interior design', 'architecture', 'graphic design', 'print', 'clothing'];
+  
+  // Must contain at least one relevant term
+  const hasRelevant = relevantTerms.some(term => text.includes(term));
+  // Must NOT contain irrelevant terms
+  const hasIrrelevant = irrelevantTerms.some(term => text.includes(term));
+  
+  return hasRelevant && !hasIrrelevant;
+};
+
 // Service functions
 const STORAGE_KEY = 'ai-radar';
 const fetchUpdates = async (): Promise<AIUpdate[]> => {
@@ -106,20 +171,41 @@ const fetchUpdates = async (): Promise<AIUpdate[]> => {
   if (!apiKey) return generateMock();
   
   try {
-    const res = await fetch(`https://newsapi.org/v2/everything?q=AI+design&from=${new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}&sortBy=publishedAt&language=en&apiKey=${apiKey}`);
-    const data = await res.json();
-    if (!data.articles) return generateMock();
+    // Fetch articles from multiple queries
+    const allArticles: any[] = [];
     
-    return data.articles.slice(0, 10).map((a: any, i: number) => ({
-      id: `api-${Date.now()}-${i}`,
-      title: a.title,
-      summary: (a.description || '').substring(0, 150),
-      source: a.source.name,
-      url: a.url,
-      category: CATEGORIES[0].id,
-      date: new Date(a.publishedAt),
-      isRead: false
-    }));
+    for (const query of NEWS_QUERIES) {
+      const res = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&from=${new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}&sortBy=publishedAt&language=en&pageSize=20&apiKey=${apiKey}`);
+      const data = await res.json();
+      
+      if (data.articles) {
+        allArticles.push(...data.articles);
+      }
+    }
+    
+    if (allArticles.length === 0) return generateMock();
+    
+    // Remove duplicates by URL
+    const uniqueArticles = Array.from(
+      new Map(allArticles.map(a => [a.url, a])).values()
+    );
+    
+    // Filter for relevance and map to our format
+    const updates = uniqueArticles
+      .filter(a => isRelevant(a.title, a.description || ''))
+      .map((a: any, i: number) => ({
+        id: `api-${Date.now()}-${i}`,
+        title: a.title,
+        summary: (a.description || a.content || 'No description available').substring(0, 150),
+        source: a.source.name,
+        url: a.url,
+        category: categorizeArticle(a.title, a.description || ''),
+        date: new Date(a.publishedAt),
+        isRead: false
+      }))
+      .slice(0, 15); // Limit to top 15 articles
+    
+    return updates.length > 0 ? updates : generateMock();
   } catch {
     return generateMock();
   }
