@@ -174,7 +174,13 @@ const STORAGE_KEY = 'ai-radar';
 const STORAGE_VERSION = 'v2'; // Increment to clear old cached data
 const fetchUpdates = async (): Promise<AIUpdate[]> => {
   const apiKey = import.meta.env.VITE_NEWS_API_KEY;
-  if (!apiKey) return generateMock();
+  
+  if (!apiKey) {
+    console.log('⚠️ No API key found - using mock data');
+    return generateMock();
+  }
+  
+  console.log('🔄 Fetching real news from API...');
   
   try {
     // Fetch articles from multiple queries
@@ -184,17 +190,30 @@ const fetchUpdates = async (): Promise<AIUpdate[]> => {
       const res = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&from=${new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}&sortBy=publishedAt&language=en&pageSize=20&apiKey=${apiKey}`);
       const data = await res.json();
       
+      if (data.status === 'error') {
+        console.error(`❌ API Error for "${query}":`, data.message);
+        continue;
+      }
+      
       if (data.articles) {
+        console.log(`✅ Fetched ${data.articles.length} articles for "${query}"`);
         allArticles.push(...data.articles);
       }
     }
     
-    if (allArticles.length === 0) return generateMock();
+    if (allArticles.length === 0) {
+      console.log('⚠️ No articles found - using mock data');
+      return generateMock();
+    }
+    
+    console.log(`📊 Total articles fetched: ${allArticles.length}`);
     
     // Remove duplicates by URL
     const uniqueArticles = Array.from(
       new Map(allArticles.map(a => [a.url, a])).values()
     );
+    
+    console.log(`🔍 Unique articles after deduplication: ${uniqueArticles.length}`);
     
     // Filter for relevance and map to our format
     const updates = uniqueArticles
@@ -208,15 +227,18 @@ const fetchUpdates = async (): Promise<AIUpdate[]> => {
         title: a.title,
         summary: (a.description || a.content || 'No description available').substring(0, 150),
         source: a.source.name,
-        url: a.url,
+        url: a.url, // This is the actual article URL from NewsAPI
         category: categorizeArticle(a.title, a.description || ''),
         date: new Date(a.publishedAt),
         isRead: false
       }))
       .slice(0, 15); // Limit to top 15 articles
     
+    console.log(`✨ Final updates: ${updates.length} relevant articles`);
+    
     return updates.length > 0 ? updates : generateMock();
-  } catch {
+  } catch (error) {
+    console.error('❌ Error fetching news:', error);
     return generateMock();
   }
 };
