@@ -1,7 +1,8 @@
 {
-  "name": "testcursor",
+  "name": "airadar",
   "private": true,
   "version": "1.0.0",
+  "description": "AI Design Radar - Curated AI updates for Product Designers",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,8 +16,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "lucide-react": "^0.575.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.21.3"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@types/node": "^25.3.0",
